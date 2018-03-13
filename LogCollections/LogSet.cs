@@ -5,17 +5,8 @@ using System.Text;
 
 namespace LogCollections
 {
-    public sealed class LogSet<T> : ISet<T>
+    public sealed class LogSet<T> : LogCollection<T>, ISet<T>
     {
-        private int _id;
-        private string _name;
-        private long _maxFileSize;
-        private int _compactEvery;
-        private int _opCounter;
-        private Func<T, byte[]> _serializer;
-        private Func<byte[], T> _deserializer;
-        private Func<T, int> _keyProvider;
-        private BinaryLog _log;
         private HashSet<T> _set;
 
         public LogSet(
@@ -26,17 +17,16 @@ namespace LogCollections
             Func<byte[], T> deserializer,
             long maxFileSize = sizeof(byte) * 1024 * 1024 * 25,
             int compactEvery = 100_000,
-            EqualityComparer<T> comparer = null)
+            EqualityComparer<T> comparer = null) 
+            : base(
+                  name, 
+                  id, 
+                  keyProvider,
+                  serializer,
+                  deserializer,
+                  maxFileSize,
+                  compactEvery)
         {
-            _name = name;
-            _id = id;
-            _serializer = serializer;
-            _deserializer = deserializer;
-            _keyProvider = keyProvider;
-            _maxFileSize = maxFileSize;
-            _compactEvery = compactEvery;
-            _opCounter = 0;
-            _log = new BinaryLog(_name, _maxFileSize);
             _set = new HashSet<T>(comparer ?? EqualityComparer<T>.Default);
 
             foreach (var entry in _log)
@@ -50,29 +40,7 @@ namespace LogCollections
                     _set.Remove(_deserializer(entry.Value));
                 }
             }
-        }
-
-        private void MaybeCompact()
-        {
-            ++_opCounter;
-            if (_opCounter > _compactEvery)
-            {
-                Compact();
-                _opCounter = 0;
-            }
-        }
-
-        private void Compact()
-        {
-            _log.Compact();
-        }
-
-        [Flags]
-        private enum Operation
-        {
-            Add = 0b0100_0000_0000_0000_0000_0000_0000_0000,
-            Mask = 0b0011_1111_1111_1111_1111_1111_1111_1111,
-        }
+        }       
 
         #region Implementation of ISet<T>
         public int Count => _set.Count;

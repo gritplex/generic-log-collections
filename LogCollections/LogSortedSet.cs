@@ -5,18 +5,9 @@ using System.Text;
 
 namespace LogCollections
 {
-    public sealed class LogSortedSet<T> : ISet<T>
+    public sealed class LogSortedSet<T> : LogCollection<T>, ISet<T>
         where T : IComparable<T>
     {
-        private int _id;
-        private string _name;
-        private long _maxFileSize;
-        private int _compactEvery;
-        private int _opCounter;
-        private Func<T, byte[]> _serializer;
-        private Func<byte[], T> _deserializer;
-        private Func<T, int> _keyProvider;
-        private BinaryLog _log;
         private SortedSet<T> _set;
 
         public LogSortedSet(
@@ -27,17 +18,16 @@ namespace LogCollections
             Func<byte[], T> deserializer,
             long maxFileSize = sizeof(byte) * 1024 * 1024 * 25,
             int compactEvery = 100_000,
-            Comparer<T> comparer = null)
-        {
-            _name = name;
-            _id = id;
-            _serializer = serializer;
-            _deserializer = deserializer;
-            _keyProvider = keyProvider;
-            _maxFileSize = maxFileSize;
-            _compactEvery = compactEvery;
-            _opCounter = 0;
-            _log = new BinaryLog(_name, _maxFileSize);
+            Comparer<T> comparer = null) 
+            : base(
+                  name,
+                  id,
+                  keyProvider,
+                  serializer,
+                  deserializer,
+                  maxFileSize,
+                  compactEvery)
+        {            
             _set = new SortedSet<T>(comparer ?? Comparer<T>.Default);
 
             foreach (var entry in _log)
@@ -53,27 +43,7 @@ namespace LogCollections
             }
         }
 
-        private void MaybeCompact()
-        {
-            ++_opCounter;
-            if (_opCounter > _compactEvery)
-            {
-                Compact();
-                _opCounter = 0;
-            }
-        }
 
-        private void Compact()
-        {
-            _log.Compact();
-        }
-
-        [Flags]
-        private enum Operation
-        {
-            Add = 0b0100_0000_0000_0000_0000_0000_0000_0000,
-            Mask = 0b0111_1111_1111_1111_1111_1111_1111_1111,
-        }
 
         #region Implementation of ISet<T>
         public int Count => _set.Count;
