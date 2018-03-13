@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.0;net452</TargetFrameworks>
+    <Version>0.0.1</Version>
+    <AssemblyVersion>0.0.0.1</AssemblyVersion>
+    <FileVersion>0.0.0.1</FileVersion>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseUrl>https://github.com/gritplex/generic-log-collections/blob/master/LICENSE</PackageLicenseUrl>
+    <Copyright>Gritplex UG (haftungsbeschränkt)</Copyright>
+    <PackageProjectUrl>https://github.com/gritplex/generic-log-collections</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/gritplex/generic-log-collections</RepositoryUrl>
+    <Authors></Authors>
+    <Company></Company>
+    <Product />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp2.0|AnyCPU'">
+    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
+
+</Project>
