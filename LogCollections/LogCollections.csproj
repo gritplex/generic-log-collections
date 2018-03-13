@@ -12,8 +12,10 @@
     <PackageProjectUrl>https://github.com/gritplex/generic-log-collections</PackageProjectUrl>
     <RepositoryUrl>https://github.com/gritplex/generic-log-collections</RepositoryUrl>
     <Authors></Authors>
-    <Company></Company>
+    <Company>Gritplex UG</Company>
     <Product />
+    <Description>File log based collections with compactification</Description>
+    <PackageTags>Collection, Generic, Log</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp2.0|AnyCPU'">
