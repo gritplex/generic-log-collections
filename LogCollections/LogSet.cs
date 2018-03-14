@@ -12,7 +12,7 @@ namespace LogCollections
         public LogSet(
             string name,
             int id,
-            Func<T, int> keyProvider,
+            Func<T, Guid> keyProvider,
             Func<T, byte[]> serializer,
             Func<byte[], T> deserializer,
             long maxFileSize = sizeof(byte) * 1024 * 1024 * 25,
@@ -31,7 +31,7 @@ namespace LogCollections
 
             foreach (var entry in _log)
             {
-                if ((entry.Key & ~((int)Operation.Add)) != 0)
+                if ((entry.Meta & c_Remove) != 0)
                 {
                     _set.Add(_deserializer(entry.Value));
                 }
@@ -49,12 +49,7 @@ namespace LogCollections
 
         public bool Add(T item)
         {
-            var entry = new LogEntry
-            {
-                Id = _id,
-                Key = _keyProvider(item) | (int)Operation.Add,
-                Value = _serializer(item)
-            };
+            var entry = new LogEntry(_id, _keyProvider(item), c_Add, _serializer(item));
             _log.Append(entry);
 
             MaybeCompact();
@@ -74,12 +69,7 @@ namespace LogCollections
         public bool Overlaps(IEnumerable<T> other) => _set.Overlaps(other);
         public bool Remove(T item)
         {
-            var entry = new LogEntry
-            {
-                Id = _id,
-                Key = _keyProvider(item) & ~((int)Operation.Add),
-                Value = _serializer(item)
-            };
+            var entry = new LogEntry(_id, _keyProvider(item), c_Remove, _serializer(item));
             _log.Append(entry);
 
             MaybeCompact();

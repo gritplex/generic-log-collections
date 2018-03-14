@@ -1,8 +1,8 @@
 ﻿using LogCollections;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using static System.Text.Encoding;
 
 namespace ConsoleTester
@@ -24,7 +24,7 @@ namespace ConsoleTester
             var set = new LogSortedSet<Data>(
                 "test",
                 100,
-                d => (d.Num % mod),
+                d => (d.Id),
                 d => UTF8.GetBytes(JsonConvert.SerializeObject(d)),
                 bArr => JsonConvert.DeserializeObject<Data>(UTF8.GetString(bArr)));
 
@@ -35,7 +35,11 @@ namespace ConsoleTester
                 var d = new Data
                 {
                     DateTime = DateTime.Now,
-                    Id = Guid.NewGuid(),
+                    Id = new Guid(
+                        BitConverter.GetBytes(rnd.Next() % 5000)
+                        .Concat(BitConverter.GetBytes(2))
+                        .Concat(BitConverter.GetBytes(2))
+                        .Concat(BitConverter.GetBytes(2)).ToArray()),
                     Num = i,
                     Name = rnd.Next().ToString()
                 };
@@ -62,6 +66,8 @@ namespace ConsoleTester
             //    log.Append(entry);
             //}
             //w.Stop();
+
+            Guid.NewGuid().ToByteArray();
 
             //var read = new List<LogEntry>(cnt);
             //w.Restart();

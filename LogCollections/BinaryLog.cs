@@ -24,7 +24,7 @@ namespace LogCollections
             _fileStorage = new FileStorage(GetFileName(_name));
         }
         
-        public void Append(LogEntry entry)
+        public void Append(in LogEntry entry)
         {
             long fsize = _fileStorage.Append(entry);
 

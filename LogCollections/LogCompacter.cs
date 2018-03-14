@@ -23,7 +23,7 @@ namespace LogCollections
         {
             if (_upTo <= 0) return 0;
 
-            var cache = new Dictionary<int, Dictionary<int, byte[]>>(10000);
+            var cache = new Dictionary<int, Dictionary<Guid, LogEntry>>(10000);
             for (int i = 0; i < _upTo; i++)
             {
                 string file = GetFileName(_log, i);
@@ -34,13 +34,13 @@ namespace LogCollections
                     {
                         if (cache.ContainsKey(entry.Id))
                         {
-                            cache[entry.Id][entry.Key] = entry.Value;
+                            cache[entry.Id][entry.Key] = entry;
                         }
                         else
                         {
-                            cache[entry.Id] = new Dictionary<int, byte[]>()
+                            cache[entry.Id] = new Dictionary<Guid, LogEntry>()
                             {
-                                { entry.Key, entry.Value }
+                                { entry.Key, entry }
                             };
                         }
                     }
@@ -54,12 +54,7 @@ namespace LogCollections
                 {
                     foreach (var key in cache[id].Keys)
                     {
-                        writer.Append(new LogEntry
-                        {
-                            Id = id,
-                            Key = key,
-                            Value = cache[id][key]
-                        });
+                        writer.Append(new LogEntry(id, key, cache[id][key].Meta, cache[id][key].Value));
                     }
                 }
             }

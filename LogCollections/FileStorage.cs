@@ -25,10 +25,17 @@ namespace LogCollections
             }
         }
 
-        internal long Append(LogEntry entry)
+        internal long Append(in LogEntry entry)
         {
             _writer.Write(entry.Id);
-            _writer.Write(entry.Key);
+
+            _writer.Write(entry.Meta);
+
+            foreach (byte b in entry.Key.ToByteArray())
+            {
+                _writer.Write(b);
+            }
+
             _writer.Write(entry.Value.Length);
             _writer.Write(entry.Value);
 
@@ -45,16 +52,12 @@ namespace LogCollections
                 while (fStream.Position < fStream.Length)
                 {
                     var id = reader.ReadInt32();
-                    var key = reader.ReadInt32();
+                    var meta = reader.ReadByte();
+                    var key =  new Guid(reader.ReadBytes(16));
                     var length = reader.ReadInt32();
                     var value = reader.ReadBytes(length);
 
-                    yield return new LogEntry
-                    {
-                        Id = id,
-                        Key = key,
-                        Value = value
-                    };
+                    yield return new LogEntry(id, key, meta ,value);
                 }
             }
         }
@@ -67,10 +70,19 @@ namespace LogCollections
 
     }
 
-    public struct LogEntry
+    public readonly struct LogEntry
     {
-        public int Id;
-        public int Key;
-        public byte[] Value;
+        public readonly int Id;
+        public readonly byte Meta;
+        public readonly Guid Key;
+        public readonly byte[] Value;
+
+        public LogEntry(int id, Guid key, byte meta, byte[] value)
+        {
+            Id = id;
+            Meta = meta;
+            Key = key;
+            Value = value;
+        }
     }
 }
