@@ -9,6 +9,7 @@ namespace LogCollections
         where T : IComparable<T>
     {
         public LogSortedSet(
+            string folder,
             string name,
             int id,
             Func<T, Guid> keyProvider,
@@ -19,6 +20,7 @@ namespace LogCollections
             int compactEvery = 100_000,
             Comparer<T> comparer = null) 
             : base(
+                  folder,
                   name,
                   id,
                   keyProvider,

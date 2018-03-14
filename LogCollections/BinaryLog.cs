@@ -13,17 +13,19 @@ namespace LogCollections
         private long _maxFileSize;
         private int _currentLogNumber;
         private bool _readOnly;
+        private string _folder;
 
         private FileStorage _fileStorage;
 
-        public BinaryLog(string name, long maxFileSize, bool readOnly = false)
+        public BinaryLog(string folder, string name, long maxFileSize, bool readOnly = false)
         {
             _name = name;
             _maxFileSize = maxFileSize;
             _readOnly = readOnly;
+            _folder = folder;
 
-            _currentLogNumber = GetCurrentLogNumber(_name, _maxFileSize);
-            _fileStorage = new FileStorage(GetFileName(_name), _readOnly);
+            _currentLogNumber = GetCurrentLogNumber(folder, _name, _maxFileSize);
+            _fileStorage = new FileStorage(GetFileName(_folder, _name), _readOnly);
         }
         
         public void Append(in LogEntry entry)
@@ -36,14 +38,14 @@ namespace LogCollections
             {
                 _fileStorage.Close();
                 _currentLogNumber++;
-                File.Move(GetFileName(_name), GetFileName(_name, _currentLogNumber));
-                _fileStorage = new FileStorage(GetFileName(_name));
+                File.Move(GetFileName(_folder,_name), GetFileName(_folder, _name, _currentLogNumber));
+                _fileStorage = new FileStorage(GetFileName(_folder,_name));
             }
         }
 
         public IEnumerator<LogEntry> GetEnumerator()
         {
-            var fileNames = GetAllFileNamesForLog(_name);
+            var fileNames = GetAllFileNamesForLog(_folder, _name);
             foreach (var fileName in fileNames)
             {
                 var reader = new FileStorage(fileName, true);
@@ -58,7 +60,7 @@ namespace LogCollections
         public void Compact()
         {
             if (_currentLogNumber == 0 || _readOnly) return;
-            var compactor = new LogCompacter(_name, _currentLogNumber + 1, _maxFileSize);
+            var compactor = new LogCompacter(_folder, _name, _currentLogNumber + 1, _maxFileSize);
             compactor.Compact();
         }
 

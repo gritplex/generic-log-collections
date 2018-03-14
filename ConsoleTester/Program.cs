@@ -22,6 +22,7 @@ namespace ConsoleTester
 
             var rnd = new Random();
             var set = new LogSet<Data>(
+                ".",
                 "test",
                 100,
                 d => (d.Id),
@@ -61,6 +62,7 @@ namespace ConsoleTester
 
             w.Restart();
             set = new LogSet<Data>(
+                ".",
                 "test",
                 100,
                 d => (d.Id),
