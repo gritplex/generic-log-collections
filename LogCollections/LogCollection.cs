@@ -7,15 +7,18 @@ namespace LogCollections
 {
     public abstract class LogCollection<T>
     {
-        protected int _id;
-        protected string _name;
-        protected long _maxFileSize;
-        protected int _compactEvery;
+        protected readonly int _id;
+        protected readonly string _name;
+        protected readonly long _maxFileSize;
+        protected readonly int _compactEvery;
         protected int _opCounter;
         protected Func<T, byte[]> _serializer;
         protected Func<byte[], T> _deserializer;
         protected Func<T, Guid> _keyProvider;
         protected BinaryLog _log;
+
+        protected ICollection<T> _internal;
+        protected readonly bool _readOnly;
 
         public LogCollection(
             string name,
@@ -23,6 +26,7 @@ namespace LogCollections
             Func<T, Guid> keyProvider,
             Func<T, byte[]> serializer,
             Func<byte[], T> deserializer,
+            bool readOnly = false,
             long maxFileSize = sizeof(byte) * 1024 * 1024 * 25,
             int compactEvery = 100_000)
         {
@@ -33,8 +37,26 @@ namespace LogCollections
             _keyProvider = keyProvider;
             _maxFileSize = maxFileSize;
             _compactEvery = compactEvery;
+            _readOnly = readOnly;
             _opCounter = 0;
-            _log = new BinaryLog(_name, _maxFileSize);
+            _log = new BinaryLog(_name, _maxFileSize, _readOnly);
+        }
+
+        protected virtual void InitFromLog()
+        {
+            if(_internal is null) throw new NullReferenceException($"{nameof(_internal)} of ICollection<{typeof(T).Name}>");
+
+            foreach (var entry in _log)
+            {
+                if ((entry.Meta & c_Add) != 0)
+                {
+                    _internal.Add(_deserializer(entry.Value));
+                }
+                else if((entry.Meta & c_Remove) != 0)
+                {
+                    _internal.Remove(_deserializer(entry.Value));
+                }
+            }
         }
 
         protected virtual void Compact()
@@ -52,7 +74,7 @@ namespace LogCollections
             }
         }
 
-        protected const byte c_Add = 0b1000_0000;
-        protected const byte c_Remove = 0b0111_1111;
+        protected const byte c_Add    = 0b1000_0000;
+        protected const byte c_Remove = 0b0100_0000;
     }
 }

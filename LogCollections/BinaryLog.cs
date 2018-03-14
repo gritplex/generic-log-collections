@@ -12,20 +12,24 @@ namespace LogCollections
         private string _name;
         private long _maxFileSize;
         private int _currentLogNumber;
+        private bool _readOnly;
 
         private FileStorage _fileStorage;
 
-        public BinaryLog(string name, long maxFileSize)
+        public BinaryLog(string name, long maxFileSize, bool readOnly = false)
         {
             _name = name;
             _maxFileSize = maxFileSize;
+            _readOnly = readOnly;
 
             _currentLogNumber = GetCurrentLogNumber(_name, _maxFileSize);
-            _fileStorage = new FileStorage(GetFileName(_name));
+            _fileStorage = new FileStorage(GetFileName(_name), _readOnly);
         }
         
         public void Append(in LogEntry entry)
         {
+            if (_readOnly) return;
+
             long fsize = _fileStorage.Append(entry);
 
             if(fsize > _maxFileSize)
@@ -53,7 +57,7 @@ namespace LogCollections
 
         public void Compact()
         {
-            if (_currentLogNumber == 0) return;
+            if (_currentLogNumber == 0 || _readOnly) return;
             var compactor = new LogCompacter(_name, _currentLogNumber + 1, _maxFileSize);
             compactor.Compact();
         }

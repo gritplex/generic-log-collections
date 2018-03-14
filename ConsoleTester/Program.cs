@@ -21,7 +21,7 @@ namespace ConsoleTester
                 cnt = mod;
 
             var rnd = new Random();
-            var set = new LogSortedSet<Data>(
+            var set = new LogSet<Data>(
                 "test",
                 100,
                 d => (d.Id),
@@ -36,10 +36,11 @@ namespace ConsoleTester
                 {
                     DateTime = DateTime.Now,
                     Id = new Guid(
-                        BitConverter.GetBytes(rnd.Next() % 5000)
+                        BitConverter.GetBytes(rnd.Next() % mod)
                         .Concat(BitConverter.GetBytes(2))
                         .Concat(BitConverter.GetBytes(2))
                         .Concat(BitConverter.GetBytes(2)).ToArray()),
+                    //Id = Guid.NewGuid(),
                     Num = i,
                     Name = rnd.Next().ToString()
                 };
@@ -53,57 +54,41 @@ namespace ConsoleTester
             for (int i = 0; i < cnt; i++)
             {                
                 set.Add(data[i]);
-                set.Remove(data[i]);
+                //set.Remove(data[i]);
             }
             w.Stop();
             Console.WriteLine($"WRITE: {w.ElapsedMilliseconds}ms  -> {(double)w.ElapsedMilliseconds / cnt}ms/op  -> {cnt / TimeSpan.FromMilliseconds(w.ElapsedMilliseconds).TotalSeconds}ops/sec");
 
-            //var log = new BinaryLog("test", sizeof(byte) * 1024 * 1024 * 5);
-
-            //w.Start();
-            //foreach (var entry in data)
+            w.Restart();
+            set = new LogSet<Data>(
+                "test",
+                100,
+                d => (d.Id),
+                d => UTF8.GetBytes(JsonConvert.SerializeObject(d)),
+                bArr => JsonConvert.DeserializeObject<Data>(UTF8.GetString(bArr)),
+                true);
+            w.Stop();
+            //foreach (var item in set)
             //{
-            //    log.Append(entry);
-            //}
-            //w.Stop();
-
-            Guid.NewGuid().ToByteArray();
-
-            //var read = new List<LogEntry>(cnt);
-            //w.Restart();
-            //foreach (var entry in log)
-            //{
-            //    read.Add(entry);
-            //}
-            //w.Stop();
-            //Console.WriteLine($"READ: {w.ElapsedMilliseconds}ms  -> {(double)w.ElapsedMilliseconds / cnt}ms/op");
-
-            //w.Restart();
-            //set.Compact();
-            //w.Stop();
-            //Console.WriteLine($"COMPACT: {w.ElapsedMilliseconds}ms");
-
-            //for (int i = 0; i < data.Length; i++)
-            //{
-            //    Debug.Assert(data[i].Id == read[i].Id);
-            //    Debug.Assert(data[i].Key == read[i].Key);
-            //    for (int j = 0; j < data[i].Value.Length; j++)
-            //    {
-            //        Debug.Assert(data[i].Value[j] == read[i].Value[j]);
-            //    }
-            //}
-
-            //Console.WriteLine("All Checks passed!");
+            //    Console.WriteLine($"{item.DateTime} ; {item.Name} ; {item.Num} ; {item.Id}");
+            //}            
+            Console.WriteLine($"Read {set.Count} in {w.ElapsedMilliseconds}ms  -> {(double)w.ElapsedMilliseconds / set.Count}ms/op  -> {set.Count / TimeSpan.FromMilliseconds(w.ElapsedMilliseconds).TotalSeconds}ops/sec");
         }
     }
 
-    public class Data : IComparable<Data>
+    public class Data : IComparable<Data>, IEquatable<Data>
     {
         public DateTime DateTime { get; set; }
         public string Name { get; set; }
         public Guid Id { get; set; }
         public int Num { get; set; }
 
-        public int CompareTo(Data other) => Num.CompareTo(other.Num);
+        public int CompareTo(Data other) => Id.CompareTo(other.Id);
+        public bool Equals(Data other) => Id.Equals(other.Id);
+
+        public override bool Equals(object obj) => Id.Equals(Id);
+        public override int GetHashCode() => Id.GetHashCode();
     }
+
+
 }
