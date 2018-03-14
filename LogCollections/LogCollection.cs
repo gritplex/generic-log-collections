@@ -9,6 +9,7 @@ namespace LogCollections
     {
         protected readonly int _id;
         protected readonly string _name;
+        protected readonly string _folder;
         protected readonly long _maxFileSize;
         protected readonly int _compactEvery;
         protected int _opCounter;
@@ -21,6 +22,7 @@ namespace LogCollections
         protected readonly bool _readOnly;
 
         public LogCollection(
+            string folder,
             string name,
             int id,
             Func<T, Guid> keyProvider,
@@ -31,6 +33,7 @@ namespace LogCollections
             int compactEvery = 100_000)
         {
             _name = name;
+            _folder = folder;
             _id = id;
             _serializer = serializer;
             _deserializer = deserializer;
@@ -39,7 +42,7 @@ namespace LogCollections
             _compactEvery = compactEvery;
             _readOnly = readOnly;
             _opCounter = 0;
-            _log = new BinaryLog(_name, _maxFileSize, _readOnly);
+            _log = new BinaryLog(_folder, _name, _maxFileSize, _readOnly);
         }
 
         protected virtual void InitFromLog()

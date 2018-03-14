@@ -8,6 +8,7 @@ namespace LogCollections
     public sealed class LogSet<T> : LogCollection<T>, ISet<T>
     {
         public LogSet(
+            string folder,
             string name,
             int id,
             Func<T, Guid> keyProvider,
@@ -18,6 +19,7 @@ namespace LogCollections
             int compactEvery = 100_000,
             EqualityComparer<T> comparer = null) 
             : base(
+                  folder,
                   name, 
                   id, 
                   keyProvider,
