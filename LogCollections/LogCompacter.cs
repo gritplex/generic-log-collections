@@ -6,7 +6,7 @@ using static LogCollections.FileHelpers;
 
 namespace LogCollections
 {
-    internal class LogCompacter
+    internal class LogCompacter : ILogCompacter
     {
         private string _log;
         private readonly int _upTo;
@@ -21,7 +21,7 @@ namespace LogCollections
             _folder = folder;
         }
 
-        internal int Compact()
+        public int Compact()
         {
             if (_upTo <= 0) return 0;
 

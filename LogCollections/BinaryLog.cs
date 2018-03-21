@@ -37,7 +37,8 @@ namespace LogCollections
             if(fsize > _maxFileSize)
             {
                 _fileStorage.Close();
-                _currentLogNumber++;
+                //_currentLogNumber++;
+                _currentLogNumber = GetCurrentLogNumber(_folder, _name, _maxFileSize);
                 File.Move(GetFileName(_folder,_name), GetFileName(_folder, _name, _currentLogNumber));
                 _fileStorage = new FileStorage(GetFileName(_folder,_name));
             }
@@ -62,6 +63,11 @@ namespace LogCollections
             if (_currentLogNumber == 0 || _readOnly) return;
             var compactor = new LogCompacter(_folder, _name, _currentLogNumber + 1, _maxFileSize);
             compactor.Compact();
+        }
+
+        public ILogCompacter GetLogCompacter()
+        {
+            return new LogCompacter(_folder, _name, _currentLogNumber + 1, _maxFileSize);
         }
 
         #region IDisposable Support
