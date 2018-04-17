@@ -18,7 +18,7 @@ namespace ConsoleTester
                 cnt = usercnt;
 
             if (args.Length > 1 && int.TryParse(args[1], out int usermod))
-                cnt = mod;
+                mod = usermod;
 
             var rnd = new Random();
             var set = new LogSet<Data>(
