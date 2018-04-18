@@ -25,9 +25,11 @@ namespace ConsoleTester
                 ".",
                 "test",
                 100,
+                d => (rnd.Next() % 10),
                 d => (d.Id),
                 d => UTF8.GetBytes(JsonConvert.SerializeObject(d)),
-                bArr => JsonConvert.DeserializeObject<Data>(UTF8.GetString(bArr)));
+                bArr => JsonConvert.DeserializeObject<Data>(UTF8.GetString(bArr)),
+                maxFileSize: sizeof(byte) * 2048 * 1000);
 
             var data = new Data[cnt];
 
@@ -58,13 +60,19 @@ namespace ConsoleTester
                 //set.Remove(data[i]);
             }
             w.Stop();
+            //set = null;
+            //GC.WaitForPendingFinalizers();
+            //GC.Collect();
             Console.WriteLine($"WRITE: {w.ElapsedMilliseconds}ms  -> {(double)w.ElapsedMilliseconds / cnt}ms/op  -> {cnt / TimeSpan.FromMilliseconds(w.ElapsedMilliseconds).TotalSeconds}ops/sec");
+
+            set.Compact(false);
 
             w.Restart();
             set = new LogSet<Data>(
                 ".",
                 "test",
                 100,
+                d => (rnd.Next() % 10),
                 d => (d.Id),
                 d => UTF8.GetBytes(JsonConvert.SerializeObject(d)),
                 bArr => JsonConvert.DeserializeObject<Data>(UTF8.GetString(bArr)),
