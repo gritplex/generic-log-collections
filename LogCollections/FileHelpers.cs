@@ -16,13 +16,13 @@ namespace LogCollections
         internal static int GetCurrentLogNumber(string folder, string logName, long maxFileSize)
         {
             var fileNames = GetAllFileNamesForLog(folder, logName);
-            int max = 0;
+            int max = -1;
             foreach (string fileName in fileNames)
             {
                 max = Math.Max(GetNumber(fileName), max);
             }
 
-            return max;
+            return max >= 0 ? max : 0;
         }
 
         internal static int GetNumber(string fileName)

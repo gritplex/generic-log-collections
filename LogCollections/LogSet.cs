@@ -31,7 +31,35 @@ namespace LogCollections
         {
             _internal = new HashSet<T>(comparer ?? EqualityComparer<T>.Default);
             InitFromLog();
-        }       
+        }
+
+        public LogSet(
+            string folder,
+            string name,
+            int defaultId,
+            Func<T, int> idProvider,
+            Func<T, Guid> keyProvider,
+            Func<T, byte[]> serializer,
+            Func<byte[], T> deserializer,
+            bool readOnly = false,
+            long maxFileSize = sizeof(byte) * 1024 * 1024 * 25,
+            int compactEvery = 100_000,
+            EqualityComparer<T> comparer = null)
+    : base(
+          folder,
+          name,
+          defaultId,
+          idProvider,
+          keyProvider,
+          serializer,
+          deserializer,
+          readOnly,
+          maxFileSize,
+          compactEvery)
+        {
+            _internal = new HashSet<T>(comparer ?? EqualityComparer<T>.Default);
+            InitFromLog();
+        }
 
         #region Implementation of ISet<T>
         public int Count => _internal.Count;
@@ -40,7 +68,7 @@ namespace LogCollections
 
         public bool Add(T item)
         {
-            var entry = new LogEntry(_id, _keyProvider(item), c_Add, _serializer(item));
+            var entry = new LogEntry(_idProvider(item), _keyProvider(item), c_Add, _serializer(item));
             _log.Append(entry);
 
             MaybeCompact();
@@ -60,7 +88,7 @@ namespace LogCollections
         public bool Overlaps(IEnumerable<T> other) => ((HashSet<T>)_internal).Overlaps(other);
         public bool Remove(T item)
         {
-            var entry = new LogEntry(_id, _keyProvider(item), c_Remove, _serializer(item));
+            var entry = new LogEntry(_idProvider(item), _keyProvider(item), c_Remove, _serializer(item));
             _log.Append(entry);
 
             MaybeCompact();

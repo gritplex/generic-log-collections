@@ -43,7 +43,7 @@ namespace LogCollections
 
         public bool Add(T item)
         {
-            var entry = new LogEntry(_id, _keyProvider(item), c_Add, _serializer(item));
+            var entry = new LogEntry(_idProvider(item), _keyProvider(item), c_Add, _serializer(item));
             _log.Append(entry);
 
             MaybeCompact();
@@ -63,7 +63,7 @@ namespace LogCollections
         public bool Overlaps(IEnumerable<T> other) => ((SortedSet<T>)_internal).Overlaps(other);
         public bool Remove(T item)
         {
-            var entry = new LogEntry(_id, _keyProvider(item), c_Remove, _serializer(item));
+            var entry = new LogEntry(_idProvider(item), _keyProvider(item), c_Remove, _serializer(item));
             _log.Append(entry);
 
             MaybeCompact();

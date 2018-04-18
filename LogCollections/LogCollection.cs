@@ -13,6 +13,7 @@ namespace LogCollections
         protected readonly long _maxFileSize;
         protected readonly int _compactEvery;
         protected int _opCounter;
+        protected Func<T, int> _idProvider;
         protected Func<T, byte[]> _serializer;
         protected Func<byte[], T> _deserializer;
         protected Func<T, Guid> _keyProvider;
@@ -42,7 +43,26 @@ namespace LogCollections
             _compactEvery = compactEvery;
             _readOnly = readOnly;
             _opCounter = 0;
+
+            _idProvider = new Func<T, int>(d => _id);
+
             _log = new BinaryLog(_folder, _name, _maxFileSize, _readOnly);
+        }
+
+        public LogCollection(
+            string folder,
+            string name,
+            int defaultId,
+            Func<T, int> idProvider,
+            Func<T, Guid> keyProvider,
+            Func<T, byte[]> serializer,
+            Func<byte[], T> deserializer,
+            bool readOnly = false,
+            long maxFileSize = sizeof(byte) * 1024 * 1024 * 25,
+            int compactEvery = 100_000) : this(folder,name, defaultId, keyProvider, serializer, deserializer, readOnly, maxFileSize, compactEvery)
+        {
+            if(idProvider != null)
+                _idProvider = idProvider;
         }
 
         protected virtual void InitFromLog()
@@ -62,9 +82,9 @@ namespace LogCollections
             }
         }
 
-        protected virtual void Compact()
+        public virtual void Compact(bool useThreadPool = true)
         {
-            _log.Compact();
+            _log.Compact(useThreadPool);
         }
 
         protected virtual void MaybeCompact()
@@ -77,7 +97,7 @@ namespace LogCollections
             }
         }
 
-        protected const byte c_Add    = 0b1000_0000;
-        protected const byte c_Remove = 0b0100_0000;
+        public const byte c_Add    = 0b1000_0000;
+        public const byte c_Remove = 0b0100_0000;
     }
 }

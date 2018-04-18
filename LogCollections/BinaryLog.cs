@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using static LogCollections.FileHelpers;
 
 namespace LogCollections
@@ -14,6 +16,8 @@ namespace LogCollections
         private int _currentLogNumber;
         private bool _readOnly;
         private string _folder;
+
+        private Task _compactificationTask;
 
         private FileStorage _fileStorage;
 
@@ -27,20 +31,19 @@ namespace LogCollections
             _currentLogNumber = GetCurrentLogNumber(folder, _name, _maxFileSize);
             _fileStorage = new FileStorage(GetFileName(_folder, _name), _readOnly);
         }
-        
+
         public void Append(in LogEntry entry)
         {
             if (_readOnly) return;
 
             long fsize = _fileStorage.Append(entry);
 
-            if(fsize > _maxFileSize)
+            if (fsize > _maxFileSize)
             {
                 _fileStorage.Close();
-                //_currentLogNumber++;
                 _currentLogNumber = GetCurrentLogNumber(_folder, _name, _maxFileSize);
-                File.Move(GetFileName(_folder,_name), GetFileName(_folder, _name, _currentLogNumber));
-                _fileStorage = new FileStorage(GetFileName(_folder,_name));
+                File.Move(GetFileName(_folder, _name), GetFileName(_folder, _name, ++_currentLogNumber));
+                _fileStorage = new FileStorage(GetFileName(_folder, _name));
             }
         }
 
@@ -58,11 +61,23 @@ namespace LogCollections
             }
         }
 
-        public void Compact()
+        public void Compact(bool useThreadPool = true)
         {
             if (_currentLogNumber == 0 || _readOnly) return;
             var compactor = new LogCompacter(_folder, _name, _currentLogNumber + 1, _maxFileSize);
-            compactor.Compact();
+            Action doCompactification = () => { compactor.Compact(); };
+            if (useThreadPool)
+            {
+                if (_compactificationTask == null || _compactificationTask.IsCompleted)
+                {
+                    var t = Task.Run(doCompactification);
+                    _compactificationTask = t;
+                }
+            }
+            else
+            {
+                doCompactification();
+            }
         }
 
         public ILogCompacter GetLogCompacter()
@@ -80,6 +95,10 @@ namespace LogCollections
                 if (disposing)
                 {
                     _fileStorage.Close();
+                    if (_compactificationTask != null)
+                    {
+                        _compactificationTask.GetAwaiter().GetResult();
+                    }
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

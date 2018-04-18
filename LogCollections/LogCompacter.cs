@@ -36,9 +36,16 @@ namespace LogCollections
                     {
                         if (cache.ContainsKey(entry.Id))
                         {
-                            cache[entry.Id][entry.Key] = entry;
+                            if ((entry.Meta & LogCollection<int>.c_Add) != 0)
+                            {
+                                cache[entry.Id][entry.Key] = entry;
+                            }
+                            else if ((entry.Meta & LogCollection<int>.c_Remove) != 0)
+                            {
+                                cache[entry.Id].Remove(entry.Key);
+                            }
                         }
-                        else
+                        else if ((entry.Meta & LogCollection<int>.c_Add) != 0)
                         {
                             cache[entry.Id] = new Dictionary<Guid, LogEntry>()
                             {
@@ -67,7 +74,13 @@ namespace LogCollections
                 var nb = GetNumber(fName);
                 if (nb > -1 && nb < _upTo)
                 {
-                    File.Delete(fName);
+                    try
+                    {
+                        File.Delete(fName);
+                    }
+                    catch (Exception e)
+                    {                        
+                    }
                 }
             }
 
