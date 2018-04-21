@@ -62,7 +62,7 @@ namespace LogCollections
             }
         }
 
-        internal void Close()
+        public void Close()
         {
             _writer?.Flush();
             _writer?.Close();
