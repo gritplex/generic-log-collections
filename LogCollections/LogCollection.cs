@@ -12,7 +12,8 @@ namespace LogCollections
         protected readonly string _folder;
         protected readonly long _maxFileSize;
         protected readonly int _compactEvery;
-        protected int _opCounter;
+        protected readonly CompactificationMode _mode;
+        protected int _modeCounter;
         protected Func<T, int> _idProvider;
         protected Func<T, byte[]> _serializer;
         protected Func<byte[], T> _deserializer;
@@ -31,7 +32,8 @@ namespace LogCollections
             Func<byte[], T> deserializer,
             bool readOnly = false,
             long maxFileSize = sizeof(byte) * 1024 * 1024 * 25,
-            int compactEvery = 100_000)
+            int compactEvery = 3,
+            CompactificationMode mode = CompactificationMode.FileCount)
         {
             _name = name;
             _folder = folder;
@@ -42,7 +44,7 @@ namespace LogCollections
             _maxFileSize = maxFileSize;
             _compactEvery = compactEvery;
             _readOnly = readOnly;
-            _opCounter = 0;
+            _modeCounter = 0;
 
             _idProvider = new Func<T, int>(d => _id);
 
@@ -59,7 +61,9 @@ namespace LogCollections
             Func<byte[], T> deserializer,
             bool readOnly = false,
             long maxFileSize = sizeof(byte) * 1024 * 1024 * 25,
-            int compactEvery = 100_000) : this(folder,name, defaultId, keyProvider, serializer, deserializer, readOnly, maxFileSize, compactEvery)
+            int compactEvery = 3,
+            CompactificationMode mode = CompactificationMode.FileCount) 
+            : this(folder,name, defaultId, keyProvider, serializer, deserializer, readOnly, maxFileSize, compactEvery, mode)
         {
             if(idProvider != null)
                 _idProvider = idProvider;
@@ -89,11 +93,25 @@ namespace LogCollections
 
         protected virtual void MaybeCompact()
         {
-            ++_opCounter;
-            if (_opCounter > _compactEvery)
+            switch (_mode)
+            {
+                case CompactificationMode.FileCount:
+                    _modeCounter = _log.FileCount;
+                    break;
+                case CompactificationMode.OperationCount:
+                    ++_modeCounter;
+                    break;
+            }
+
+            if (_modeCounter > _compactEvery)
             {
                 Compact();
-                _opCounter = 0;
+                _modeCounter = 0;
+
+                if(_mode == CompactificationMode.FileCount)
+                {
+                    _log.ResetFileCount();
+                }
             }
         }
 
