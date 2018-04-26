@@ -16,10 +16,12 @@ namespace LogCollections
         private int _currentLogNumber;
         private bool _readOnly;
         private string _folder;
+        private int _fileCount;
 
         private Task _compactificationTask;
 
         private FileStorage _fileStorage;
+        public int FileCount { get { return _fileCount; } }
 
         public BinaryLog(string folder, string name, long maxFileSize, bool readOnly = false)
         {
@@ -44,6 +46,7 @@ namespace LogCollections
                 _currentLogNumber = GetCurrentLogNumber(_folder, _name, _maxFileSize);
                 File.Move(GetFileName(_folder, _name), GetFileName(_folder, _name, ++_currentLogNumber));
                 _fileStorage = new FileStorage(GetFileName(_folder, _name));
+                ++_fileCount;
             }
         }
 
@@ -65,7 +68,7 @@ namespace LogCollections
         {
             if (_currentLogNumber == 0 || _readOnly) return;
             var compactor = new LogCompacter(_folder, _name, _currentLogNumber + 1, _maxFileSize);
-            Action doCompactification = () => { compactor.Compact(); };
+            Action doCompactification = () => { compactor.Compact(); ResetFileCount(); };
             if (useThreadPool)
             {
                 if (_compactificationTask == null || _compactificationTask.IsCompleted)
@@ -79,6 +82,11 @@ namespace LogCollections
                 doCompactification();
             }
         }
+
+        public void ResetFileCount()
+        {
+            _fileCount = 0;
+        }        
 
         public ILogCompacter GetLogCompacter()
         {
